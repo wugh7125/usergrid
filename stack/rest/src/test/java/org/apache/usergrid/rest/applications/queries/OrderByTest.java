@@ -61,6 +61,30 @@ public class OrderByTest extends QueryTestBase {
     }
 
 
+    @Test
+    public void testQueryEqualityHonorsCaseSensitivity() throws IOException {
+        String collectionName = "stuff";
+        Entity lowerCaseEntity = new Entity();
+        lowerCaseEntity.put( "name","thing1" );
+        lowerCaseEntity.put( "random","fury" );
+
+        Entity mixedCaseEntity = new Entity();
+        mixedCaseEntity.put( "name","thing2" );
+        mixedCaseEntity.put( "random","Fury" );
+        //create our test entities
+        this.app().collection( collectionName ).post( lowerCaseEntity );
+        this.app().collection( collectionName ).post( mixedCaseEntity );
+
+        refreshIndex();
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * where random = 'fury' ");
+        Collection activities = this.app().collection(collectionName).get(params);
+        assertEquals(1, activities.getResponse().getEntityCount());
+        assertEquals( "fury",activities.getResponse().getEntities().get( 0 ).get( "random" ) );
+    }
+
+
     /**
      * Test correct sort order for Long properties
      *
