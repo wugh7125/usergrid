@@ -363,7 +363,7 @@ public class EsQueryVistor implements QueryVisitor {
 
         //special case so we support our '*' char with wildcard
         if ( value instanceof String ) {
-            final String stringValue = (( String ) value).toLowerCase().trim();
+            final String stringValue = (( String ) value).toLowerCase();
 
             // or field is just a string that does need a prefix us a query
             if ( stringValue.contains( "*" ) ) {

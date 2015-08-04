@@ -44,13 +44,13 @@ public class OrderByTest extends QueryTestBase {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
-        generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities( numOfEntities, collectionName );
 
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by ordinal asc")
             .setLimit(numOfEntities);
         Collection activities = this.app().collection("activities").get(params);
-        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        assertEquals( numOfEntities, activities.getResponse().getEntityCount() );
         //results should be ordered by ordinal
         int index = 0;
         while (activities.hasNext()) {
@@ -63,19 +63,23 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void testValueWithSpaceAtEndStillQueryable() throws IOException {
         String collectionName = "stuff";
-        Entity lowerCaseEntity = new Entity();
-        lowerCaseEntity.put( "name","thing1" );
-        lowerCaseEntity.put( "random","fury " );
+        Entity spaceAtTheEndOfString = new Entity();
+        spaceAtTheEndOfString.put( "name","thing1" );
+        spaceAtTheEndOfString.put( "random", "fury " );
+        this.app().collection( collectionName ).post( spaceAtTheEndOfString );
 
-        this.app().collection( collectionName ).post( lowerCaseEntity );
-
+        //Add an extra entity to make sure this won't be returned in the below query.
+        Entity noSpaceButSimilarString = new Entity();
+        noSpaceButSimilarString.put( "name","thing2" );
+        noSpaceButSimilarString.put( "random", "fury" );
+        this.app().collection( collectionName ).post( noSpaceButSimilarString );
         refreshIndex();
 
         QueryParameters params = new QueryParameters()
-            .setQuery("select * where random = 'fury' ");
+            .setQuery("select * where random = 'fury ' ");
         Collection activities = this.app().collection(collectionName).get(params);
         assertEquals(1, activities.getResponse().getEntityCount());
-        assertEquals( "fury",activities.getResponse().getEntities().get( 0 ).get( "random" ) );
+        assertEquals( "fury ",activities.getResponse().getEntities().get( 0 ).get( "random" ) );
     }
 
     /**
