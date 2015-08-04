@@ -60,6 +60,23 @@ public class OrderByTest extends QueryTestBase {
         }
     }
 
+    @Test
+    public void testValueWithSpaceAtEndStillQueryable() throws IOException {
+        String collectionName = "stuff";
+        Entity lowerCaseEntity = new Entity();
+        lowerCaseEntity.put( "name","thing1" );
+        lowerCaseEntity.put( "random","fury " );
+
+        this.app().collection( collectionName ).post( lowerCaseEntity );
+
+        refreshIndex();
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * where random = 'fury' ");
+        Collection activities = this.app().collection(collectionName).get(params);
+        assertEquals(1, activities.getResponse().getEntityCount());
+        assertEquals( "fury",activities.getResponse().getEntities().get( 0 ).get( "random" ) );
+    }
 
     /**
      * Test correct sort order for Long properties
