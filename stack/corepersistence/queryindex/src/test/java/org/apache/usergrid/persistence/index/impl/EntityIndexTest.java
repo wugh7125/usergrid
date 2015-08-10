@@ -450,7 +450,9 @@ public class EntityIndexTest extends BaseIT {
 
         testQuery( scope, searchTypes, "name = 'Minerva Harrell' and age <= 40", 1 );
 
-        testQuery( scope, searchTypes, "name = 'Morgan* '", 1 );
+        //Commented out because we no longer trim the spaces at the end ergo this looking for a string with a
+        //space at the end ( of which isn't created
+//        testQuery( scope, searchTypes, "name = 'Morgan* '", 1 );
 
         testQuery( scope, searchTypes, "name = 'Morgan*'", 1 );
 

@@ -76,9 +76,10 @@ public class OrderByTest extends QueryTestBase {
         refreshIndex();
 
         QueryParameters params = new QueryParameters()
-            .setQuery("select * where random = 'fury ' ");
+            .setQuery("select * where random = 'fury '");
         Collection activities = this.app().collection(collectionName).get(params);
         assertEquals(1, activities.getResponse().getEntityCount());
+        //note the space below
         assertEquals( "fury ",activities.getResponse().getEntities().get( 0 ).get( "random" ) );
     }
 
