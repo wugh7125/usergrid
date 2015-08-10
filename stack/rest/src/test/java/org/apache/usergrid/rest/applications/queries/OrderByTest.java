@@ -82,6 +82,29 @@ public class OrderByTest extends QueryTestBase {
         assertEquals( "fury ",activities.getResponse().getEntities().get( 0 ).get( "random" ) );
     }
 
+    @Test
+    public void testValueWithStrangeEncodingsStillReturn() throws IOException {
+        String encodingTestString = "%7Bfury%7D";
+        String collectionName = "stuff";
+        Entity spaceAtTheEndOfString = new Entity();
+        spaceAtTheEndOfString.put( "name","thing1" );
+        spaceAtTheEndOfString.put( "random", encodingTestString );
+        this.app().collection( collectionName ).post( spaceAtTheEndOfString );
+
+//        //Add an extra entity to make sure this won't be returned in the below query.
+//        Entity noSpaceButSimilarString = new Entity();
+//        noSpaceButSimilarString.put( "name","thing2" );
+//        noSpaceButSimilarString.put( "random", "fury" );
+//        this.app().collection( collectionName ).post( noSpaceButSimilarString );
+//        refreshIndex();
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * where random = \"%7Bfury%7D\"");
+        Collection activities = this.app().collection(collectionName ).get(params);
+        assertEquals(1, activities.getResponse().getEntityCount());
+        assertEquals( encodingTestString,activities.getResponse().getEntities().get( 0 ).get( "random" ) );
+    }
+
     /**
      * Test correct sort order for Long properties
      *
