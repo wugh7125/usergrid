@@ -45,8 +45,6 @@ public class ShardEntryGroup {
 
     private List<Shard> shards;
 
-    private final long delta;
-
     private long maxCreatedTime;
 
     private Shard compactionTarget;
@@ -57,9 +55,8 @@ public class ShardEntryGroup {
     /**
      * The max delta we accept in milliseconds for create time to be considered a member of this group
      */
-    public ShardEntryGroup( final long delta ) {
-        Preconditions.checkArgument( delta > 0, "delta must be greater than 0" );
-        this.delta = delta;
+    public ShardEntryGroup( ) {
+
         this.shards = new ArrayList<>();
         this.maxCreatedTime = 0;
     }
@@ -283,15 +280,7 @@ public class ShardEntryGroup {
         /**
          * We don't have enough shards to compact, ignore
          */
-        return getCompactionTarget() != null
-
-
-                /**
-                 * If something was created within the delta time frame, not everyone may have seen it due to
-                 * cache refresh, we can't compact yet.
-                 */
-
-                && currentTime - delta > maxCreatedTime;
+        return getCompactionTarget() != null;
     }
 
 
@@ -316,7 +305,6 @@ public class ShardEntryGroup {
     public String toString() {
         return "ShardEntryGroup{" +
                 "shards=" + shards +
-                ", delta=" + delta +
                 ", maxCreatedTime=" + maxCreatedTime +
                 ", compactionTarget=" + compactionTarget +
                 '}';

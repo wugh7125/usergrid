@@ -120,7 +120,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             existingShards = Collections.singleton( MIN_SHARD ).iterator();
         }
 
-        return new ShardEntryGroupIterator( existingShards, graphFig.getShardMinDelta(), shardGroupCompaction, scope,
+        return new ShardEntryGroupIterator( existingShards, shardGroupCompaction, scope,
                 directedEdgeMeta );
     }
 

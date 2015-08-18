@@ -152,6 +152,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         if(LOG.isDebugEnabled()) {
             LOG.debug("Compacting shard group. count is {} ", countAudits.get());
         }
+
         final CompactionResult.CompactionBuilder resultBuilder = CompactionResult.builder();
 
         final Shard targetShard = group.getCompactionTarget();
@@ -305,7 +306,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         }
 
         countAudits.getAndIncrement();
-        
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("Auditing shard group. count is {} ", countAudits.get());
         }
