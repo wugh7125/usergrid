@@ -97,7 +97,6 @@ public class NodeShardApproximationTest {
 
         graphFig = mock( GraphFig.class );
 
-        when( graphFig.getShardCacheSize() ).thenReturn( 10000l );
         when( graphFig.getShardSize() ).thenReturn( 250000l );
         when( graphFig.getCounterFlushQueueSize() ).thenReturn( 10000 );
 
@@ -466,28 +465,6 @@ public class NodeShardApproximationTest {
         }
 
 
-        @Override
-        public long getShardCacheTimeout() {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-
-        @Override
-        public long getShardMinDelta() {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-
-        @Override
-        public long getShardCacheSize() {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-
-        @Override
-        public int getShardCacheRefreshWorkerCount() {
-            return 0;
-        }
 
 
         @Override
@@ -517,6 +494,24 @@ public class NodeShardApproximationTest {
         @Override
         public int getCounterFlushQueueSize() {
             return 10000;
+        }
+
+
+        @Override
+        public String getShardWriteConsistency() {
+            return null;
+        }
+
+
+        @Override
+        public String getShardReadConsistency() {
+            return null;
+        }
+
+
+        @Override
+        public String getShardAuditConsistency() {
+            return null;
         }
 
 

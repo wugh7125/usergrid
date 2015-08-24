@@ -79,45 +79,9 @@ public class NodeShardAllocationTest {
 
         graphFig = mock( GraphFig.class );
 
-        when( graphFig.getShardCacheSize() ).thenReturn( 10000l );
+
         when( graphFig.getShardSize() ).thenReturn( 20000l );
 
-        final long timeout = 30000;
-        when( graphFig.getShardCacheTimeout() ).thenReturn( timeout );
-        when( graphFig.getShardMinDelta() ).thenReturn( timeout * 2 );
-    }
-
-
-    @Test
-    public void minTime() {
-        final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
-
-        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
-
-        final EdgeColumnFamilies edgeColumnFamilies = mock( EdgeColumnFamilies.class );
-
-        final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
-
-        final NodeShardApproximation nodeShardCounterSerialization = mock( NodeShardApproximation.class );
-
-
-        final TimeService timeService = mock( TimeService.class );
-
-
-        NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardCounterSerialization, timeService, graphFig, shardGroupCompaction );
-
-
-        final long timeservicetime = System.currentTimeMillis();
-
-        when( timeService.getCurrentTime() ).thenReturn( timeservicetime );
-
-        final long expected = timeservicetime - 2 * graphFig.getShardCacheTimeout();
-
-        final long returned = approximation.getMinTime();
-
-        assertEquals( "Correct time was returned", expected, returned );
     }
 
 
@@ -153,7 +117,7 @@ public class NodeShardAllocationTest {
         final Shard firstShard = new Shard( 0l, 0l, true );
         final Shard futureShard = new Shard( 10000l, timeservicetime, false );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 1000l );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
         shardEntryGroup.addShard( futureShard );
         shardEntryGroup.addShard( firstShard );
 
@@ -195,7 +159,7 @@ public class NodeShardAllocationTest {
 
         final Shard futureShard = new Shard( 10000l, timeservicetime, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 1000l );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
         shardEntryGroup.addShard( futureShard );
 
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( nodeId, type, subType );
@@ -243,7 +207,7 @@ public class NodeShardAllocationTest {
 
         final Shard futureShard = new Shard( 0l, 0l, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 1000l );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
         shardEntryGroup.addShard( futureShard );
 
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( nodeId, type, subType );
@@ -358,7 +322,7 @@ public class NodeShardAllocationTest {
 
         final Shard futureShard = new Shard( 0l, 0l, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 1000l );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
         shardEntryGroup.addShard( futureShard );
 
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( nodeId, type, subType );
@@ -449,7 +413,7 @@ public class NodeShardAllocationTest {
 
         final Shard futureShard = new Shard( 0l, 0l, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 1000l );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
         shardEntryGroup.addShard( futureShard );
 
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( nodeId, type, subType );
@@ -518,13 +482,6 @@ public class NodeShardAllocationTest {
 
         when( timeService.getCurrentTime() ).thenReturn( timeservicetime );
 
-        assertTrue( "Shard cache mocked", graphFig.getShardCacheTimeout() > 0 );
-
-
-        /**
-         * Simulates clock drift when 2 nodes create future shards near one another
-         */
-        final long minDelta = graphFig.getShardMinDelta();
 
 
         final Shard minShard = new Shard( 0l, 0l, true );
@@ -541,13 +498,13 @@ public class NodeShardAllocationTest {
         // should be removed
 
         //this should get dropped, It's allocated after future shard2 even though the time is less
-        final Shard futureShard1 = new Shard( 10000, minTime + minDelta, false );
+        final Shard futureShard1 = new Shard( 10000, minTime + 10000, false );
 
         //should get kept.
         final Shard futureShard2 = new Shard( 10005, minTime, false );
 
         //should be removed
-        final Shard futureShard3 = new Shard( 10010, minTime + minDelta / 2, false );
+        final Shard futureShard3 = new Shard( 10010, minTime + 1000, false );
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( nodeId, type, subType );
 
@@ -555,7 +512,7 @@ public class NodeShardAllocationTest {
          * Mock up returning a min shard
          */
         when( edgeShardSerialization
-                .getShardMetaData( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) ).thenReturn(
+                .getShardMetaDataLocal( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) ).thenReturn(
                 Arrays.asList( futureShard3, futureShard2, futureShard1, compactedShard, minShard ).iterator() );
 
 
@@ -583,7 +540,7 @@ public class NodeShardAllocationTest {
         //now verify all 4 are in this group.  This is because the first shard (0,0) (n-1_ may be the only shard other
         //nodes see while we're rolling our state.  This means it should be read and merged from as well
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( minTime + minDelta );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( minTime  );
 
         assertEquals( "Shard size as expected", 1, writeShards.size() );
 
@@ -603,7 +560,7 @@ public class NodeShardAllocationTest {
         shardEntryGroup = result.next();
 
 
-        writeShards = shardEntryGroup.getWriteShards( minTime + minDelta );
+        writeShards = shardEntryGroup.getWriteShards( minTime  );
 
 
         assertTrue( "Previous shard present", writeShards.contains( minShard ) );
@@ -635,7 +592,7 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
-        final long returnTime = System.currentTimeMillis() + graphFig.getShardCacheTimeout() * 2;
+        final long returnTime = System.currentTimeMillis();
 
         when( timeService.getCurrentTime() ).thenReturn( returnTime );
 
@@ -656,7 +613,7 @@ public class NodeShardAllocationTest {
          * Mock up returning an empty iterator, our audit shouldn't create a new shard
          */
         when( edgeShardSerialization
-                .getShardMetaData( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
+                .getShardMetaDataLocal( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
                 .thenReturn( Collections.<Shard>emptyList().iterator() );
 
 
@@ -699,77 +656,4 @@ public class NodeShardAllocationTest {
     }
 
 
-    @Test
-    public void invalidConfiguration() {
-
-        final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
-
-        final GraphFig graphFig = mock( GraphFig.class );
-
-        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
-
-        final EdgeColumnFamilies edgeColumnFamilies = mock( EdgeColumnFamilies.class );
-
-        final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
-
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
-
-        /**
-         * Return 100000 milliseconds
-         */
-        final TimeService timeService = mock( TimeService.class );
-
-        final long time = 100000l;
-
-        when( timeService.getCurrentTime() ).thenReturn( time );
-
-
-        final long cacheTimeout = 30000l;
-
-        when( graphFig.getShardCacheTimeout() ).thenReturn( 30000l );
-
-
-        final long tooSmallDelta = ( long ) ( ( cacheTimeout * 2 ) * .99 );
-
-        when( graphFig.getShardMinDelta() ).thenReturn( tooSmallDelta );
-
-        NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
-
-
-        /**
-         * Should throw an exception
-         */
-        try {
-            approximation.getMinTime();
-            fail( "Should have thrown a GraphRuntimeException" );
-        }
-        catch ( GraphRuntimeException gre ) {
-            //swallow
-        }
-
-        //now test something that passes.
-
-        final long minDelta = cacheTimeout * 2;
-
-        when( graphFig.getShardMinDelta() ).thenReturn( minDelta );
-
-        long returned = approximation.getMinTime();
-
-        long expectedReturned = time - minDelta;
-
-        assertEquals( expectedReturned, returned );
-
-        final long delta = cacheTimeout * 4;
-
-        when( graphFig.getShardMinDelta() ).thenReturn( delta );
-
-        returned = approximation.getMinTime();
-
-        expectedReturned = time - delta;
-
-        assertEquals( expectedReturned, returned );
-    }
 }

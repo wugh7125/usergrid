@@ -57,11 +57,5 @@ public interface NodeShardAllocation {
     boolean auditShard( final ApplicationScope scope, final ShardEntryGroup shardEntryGroup,
                         final DirectedEdgeMeta directedEdgeMeta );
 
-    /**
-     * Get the minimum time that a created shard should be considered "new", and be used for both new writes and reads
-     * @return
-     */
-    long getMinTime();
-
 
 }

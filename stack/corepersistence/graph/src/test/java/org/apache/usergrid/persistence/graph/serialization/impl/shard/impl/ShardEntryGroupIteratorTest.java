@@ -56,11 +56,10 @@ public class ShardEntryGroupIteratorTest {
         final ApplicationScope scope = new ApplicationScopeImpl( IdGenerator.createId( "application" ) );
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
         final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
-        final long delta = 10000;
         final Iterator<Shard> noShards = Collections.<Shard>emptyList().iterator();
 
         //should blow up, our iterator is empty
-        new ShardEntryGroupIterator( noShards, delta, shardGroupCompaction, scope, directedEdgeMeta );
+        new ShardEntryGroupIterator( noShards, shardGroupCompaction, scope, directedEdgeMeta );
     }
 
 
@@ -74,11 +73,10 @@ public class ShardEntryGroupIteratorTest {
         final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
 
         final Shard minShard = new Shard( 0, 0, true );
-        final long delta = 10000;
         final Iterator<Shard> noShards = Collections.singleton( minShard ).iterator();
 
         ShardEntryGroupIterator entryGroupIterator =
-                new ShardEntryGroupIterator( noShards, delta, shardGroupCompaction, scope, directedEdgeMeta );
+                new ShardEntryGroupIterator( noShards, shardGroupCompaction, scope, directedEdgeMeta );
 
 
         assertTrue( "Root shard always present", entryGroupIterator.hasNext() );
@@ -163,7 +161,7 @@ public class ShardEntryGroupIteratorTest {
 
 
         ShardEntryGroupIterator entryGroupIterator =
-                new ShardEntryGroupIterator( noShards, delta, shardGroupCompaction, scope, directedEdgeMeta );
+                new ShardEntryGroupIterator( noShards, shardGroupCompaction, scope, directedEdgeMeta );
 
         assertTrue( "max group present", entryGroupIterator.hasNext() );
 

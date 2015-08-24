@@ -109,22 +109,8 @@ public class GraphManagerShardConsistencyIT {
 
         originalShardSize = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_SIZE );
 
-        originalShardTimeout = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_CACHE_TIMEOUT );
-
-        originalShardDelta = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_MIN_DELTA );
-
 
         ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 500 );
-
-
-        final long cacheTimeout = 2000;
-        //set our cache timeout to the above value
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_CACHE_TIMEOUT, cacheTimeout );
-
-
-        final long minDelta = ( long ) ( cacheTimeout * 2.5 );
-
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_MIN_DELTA, minDelta );
 
 
         //get the system property of the UUID to use.  If one is not set, use the defualt
@@ -215,7 +201,7 @@ public class GraphManagerShardConsistencyIT {
 
 
         //min stop time the min delta + 1 cache cycle timeout
-        final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout();
+        final long minExecutionTime = 10000;
 
 
         log.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,

@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +54,7 @@ public class ShardEntryGroup {
     /**
      * The max delta we accept in milliseconds for create time to be considered a member of this group
      */
-    public ShardEntryGroup( ) {
-
+    public ShardEntryGroup() {
         this.shards = new ArrayList<>();
         this.maxCreatedTime = 0;
     }
@@ -95,8 +93,6 @@ public class ShardEntryGroup {
         }
 
 
-
-
         return false;
     }
 
@@ -129,6 +125,22 @@ public class ShardEntryGroup {
 
 
     /**
+     * Get the max shard based on time indexes
+     *
+     * @return
+     */
+    public Shard getMaxShard() {
+        final int size = shards.size();
+
+        if ( size < 1 ) {
+            return null;
+        }
+
+        return shards.get( size - 1 );
+    }
+
+
+    /**
      * Get the entries that we should read from.
      */
     public Collection<Shard> getReadShards() {
@@ -138,18 +150,15 @@ public class ShardEntryGroup {
         final Shard compactionTarget = getCompactionTarget();
 
 
-
-        if(compactionTarget != null){
+        if ( compactionTarget != null ) {
             LOG.debug( "Returning shards {} and {} as read shards", compactionTarget, staticShard );
             return Arrays.asList( compactionTarget, staticShard );
         }
 
 
         LOG.debug( "Returning shards {} read shard", staticShard );
-        return  Collections.singleton( staticShard );
+        return Collections.singleton( staticShard );
     }
-
-
 
 
     /**
@@ -165,19 +174,17 @@ public class ShardEntryGroup {
 
             final Shard compactionTarget = getCompactionTarget();
 
-            LOG.debug( "Returning shard {} as write shard", compactionTarget);
+            LOG.debug( "Returning shard {} as write shard", compactionTarget );
 
-            return Collections.singleton( compactionTarget  );
-
+            return Collections.singleton( compactionTarget );
         }
 
         final Shard staticShard = getRootShard();
 
 
-        LOG.debug( "Returning shard {} as write shard", staticShard);
+        LOG.debug( "Returning shard {} as write shard", staticShard );
 
         return Collections.singleton( staticShard );
-
     }
 
 
@@ -191,21 +198,21 @@ public class ShardEntryGroup {
 
     /**
      * Get the root shard that was created in this group
-     * @return
      */
-    private Shard getRootShard(){
-        if(rootShard != null){
+    private Shard getRootShard() {
+        if ( rootShard != null ) {
             return rootShard;
         }
 
-        final Shard rootCandidate = shards.get( shards.size() -1 );
+        final Shard rootCandidate = shards.get( shards.size() - 1 );
 
-        if(rootCandidate.isCompacted()){
+        if ( rootCandidate.isCompacted() ) {
             rootShard = rootCandidate;
         }
 
         return rootShard;
     }
+
 
     /**
      * Get the shard all compactions should write to.  Null indicates we cannot find a shard that could be used as a
@@ -297,16 +304,16 @@ public class ShardEntryGroup {
 
 
         return !shard.isCompacted() && ( compactionTarget != null && compactionTarget.getShardIndex() != shard
-                .getShardIndex() );
+            .getShardIndex() );
     }
 
 
     @Override
     public String toString() {
         return "ShardEntryGroup{" +
-                "shards=" + shards +
-                ", maxCreatedTime=" + maxCreatedTime +
-                ", compactionTarget=" + compactionTarget +
-                '}';
+            "shards=" + shards +
+            ", maxCreatedTime=" + maxCreatedTime +
+            ", compactionTarget=" + compactionTarget +
+            '}';
     }
 }

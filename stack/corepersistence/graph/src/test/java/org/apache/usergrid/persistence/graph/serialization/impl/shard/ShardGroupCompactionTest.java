@@ -84,7 +84,7 @@ public class ShardGroupCompactionTest {
         //we shouldn't be able to compact, should throw an exception
         final long timeNow = createTime + delta - 1;
 
-        ShardEntryGroup group = new ShardEntryGroup( delta );
+        ShardEntryGroup group = new ShardEntryGroup( );
         group.addShard( new Shard( 2000, createTime, false ) );
         group.addShard( new Shard( 1000, 5000, true ) );
 

@@ -54,6 +54,12 @@ public interface GraphFig extends GuicyFig {
     String SHARD_AUDIT_WORKERS = "usergrid.graph.shard.audit.worker.count";
 
 
+    String SHARD_WRITE_CONSISTENCY = "usergrid.graph.shard.write.consistency";
+
+    String SHARD_READ_CONSISTENCY = "usergrid.graph.shard.read.consistency";
+
+    String SHARD_AUDIT_CONSISTENCY = "usergrid.graph.shard.audit.consistency";
+
     String SHARD_REPAIR_CHANCE = "usergrid.graph.shard.repair.chance";
 
 
@@ -103,5 +109,23 @@ public interface GraphFig extends GuicyFig {
     @Default( "1000" )
     @Key( COUNTER_WRITE_FLUSH_QUEUE_SIZE )
     int getCounterFlushQueueSize();
+
+    @Default( "CL_EACH_QUORUM" )
+    @Key( SHARD_WRITE_CONSISTENCY )
+    String getShardWriteConsistency();
+
+    /**
+     * Get the consistency level for doing reads
+     */
+    @Default( "CL_LOCAL_QUORUM" )
+    @Key( SHARD_READ_CONSISTENCY )
+    String getShardReadConsistency();
+
+    /**
+     * Get the consistency level for performing a shard audit
+     */
+    @Default( "CL_EACH_QUORUM" )
+    @Key( SHARD_AUDIT_CONSISTENCY )
+    String getShardAuditConsistency();
 }
 
