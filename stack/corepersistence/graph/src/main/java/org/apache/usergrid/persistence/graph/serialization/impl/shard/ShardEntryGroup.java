@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -123,8 +122,6 @@ public class ShardEntryGroup {
 
     /**
      * Get the max shard based on time indexes
-     *
-     * @return
      */
     public Shard getMaxShard() {
         final int size = shards.size();
@@ -149,7 +146,8 @@ public class ShardEntryGroup {
 
         if ( compactionTarget != null ) {
             LOG.debug( "Returning shards {} and {} as read shards", compactionTarget, staticShard );
-            return Arrays.asList( compactionTarget, staticShard );
+            //if we have a compaction target, we need to read from all shards to ensure we're aggregating data correctly
+            return shards;
         }
 
 
@@ -161,19 +159,25 @@ public class ShardEntryGroup {
     /**
      * Get the entries, with the earliest allocated uncompacted shard being first
      */
-    public Collection<Shard> getWriteShards() {
+    public Collection<Shard> getWriteShards( final long edgeIndex ) {
 
         /**
          * The shards in this set can be combined, we should only write to the compaction target to avoid
          * adding data to other shards
          */
-        if ( !isTooSmallToCompact() && shouldCompact(  ) ) {
+        if ( !isTooSmallToCompact() && shouldCompact() ) {
 
             final Shard compactionTarget = getCompactionTarget();
 
             LOG.debug( "Returning shard {} as write shard", compactionTarget );
 
-            return Collections.singleton( compactionTarget );
+            //should go into the compaction target, it's a <= the edge value of the compaction
+            if ( compactionTarget.getShardIndex() <= edgeIndex ) {
+                return Collections.singleton( compactionTarget );
+            }
+
+            //otherwise the edge should go into the root shard
+
         }
 
 
@@ -250,7 +254,8 @@ public class ShardEntryGroup {
 
             //the shard is not compacted, and we've either never set a candidate
             //or the candidate has a higher created timestamp than our current shard
-            if ( !currentTargetCompaction.isCompacted() && (compactionCandidate == null || currentTargetCompaction.getCreatedTime() < compactionCandidate.getCreatedTime())) {
+            if ( !currentTargetCompaction.isCompacted() && ( compactionCandidate == null
+                || currentTargetCompaction.getCreatedTime() < compactionCandidate.getCreatedTime() ) ) {
                 compactionCandidate = currentTargetCompaction;
             }
         }
@@ -282,7 +287,7 @@ public class ShardEntryGroup {
      *
      * @return True if these shards can safely be combined into a single shard, false otherwise
      */
-    public boolean shouldCompact( ) {
+    public boolean shouldCompact() {
 
         /**
          * We don't have enough shards to compact, ignore

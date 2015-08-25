@@ -271,7 +271,7 @@ public class ShardEntryGroupTest {
 
         Collection<Shard> readShards = shardEntryGroup.getReadShards();
 
-        assertEquals( "Shard size correct", 2, readShards.size() );
+        assertEquals( "Shard size correct", 3, readShards.size() );
 
         assertTrue( "First shard present", readShards.contains( secondShard ) );
 
@@ -307,39 +307,19 @@ public class ShardEntryGroupTest {
         assertTrue( "Shard added", result );
 
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards(newAllocatedCompactionTarget.getShardIndex() );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
         assertTrue( "Lowest new shard present", writeShards.contains( newAllocatedCompactionTarget ) );
 
 
-        writeShards = shardEntryGroup.getWriteShards( );
+        writeShards = shardEntryGroup.getWriteShards( compactedShard.getShardIndex() );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
-        assertTrue( "Lowest new shard present", writeShards.contains( newAllocatedCompactionTarget ) );
+        assertTrue( "Lowest new shard present", writeShards.contains( compactedShard ) );
 
-
-        /**
-         * Not the max created timestamp, shouldn't return less than all shards
-         */
-        writeShards = shardEntryGroup.getWriteShards(  );
-
-        assertEquals( "Shard size correct", 1, writeShards.size() );
-
-
-        assertTrue( "Second shard present", writeShards.contains( newAllocatedCompactionTarget ) );
-
-
-        assertEquals( "Compaction target correct", newAllocatedCompactionTarget, shardEntryGroup.getCompactionTarget() );
-
-        writeShards = shardEntryGroup.getWriteShards( );
-
-        assertEquals( "Shard size correct", 1, writeShards.size() );
-
-
-        assertTrue( "Second shard present", writeShards.contains( newAllocatedCompactionTarget ) );
     }
 
 

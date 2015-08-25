@@ -534,13 +534,13 @@ public class NodeShardAllocationTest {
 
         ShardEntryGroup shardEntryGroup = result.next();
 
-        assertEquals( "Future shard returned", futureShard1, shardEntryGroup.getCompactionTarget() );
+        assertEquals( "Future shard returned", futureShard2, shardEntryGroup.getCompactionTarget() );
 
 
         //now verify all 4 are in this group.  This is because the first shard (0,0) (n-1_ may be the only shard other
         //nodes see while we're rolling our state.  This means it should be read and merged from as well
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards(  );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( futureShard2.getShardIndex() );
 
         assertEquals( "Shard size as expected", 1, writeShards.size() );
 
@@ -552,7 +552,7 @@ public class NodeShardAllocationTest {
 
         Collection<Shard> readShards = shardEntryGroup.getReadShards();
 
-        assertEquals( "Shard size as expected", 2, readShards.size() );
+        assertEquals( "Shard size as expected", 4, readShards.size() );
 
         assertTrue( readShards.contains( futureShard1 ) );
         assertTrue( readShards.contains( futureShard2 ) );
@@ -565,7 +565,7 @@ public class NodeShardAllocationTest {
         shardEntryGroup = result.next();
 
 
-        writeShards = shardEntryGroup.getWriteShards(  );
+        writeShards = shardEntryGroup.getWriteShards( minShard.getShardIndex() );
 
 
         assertTrue( "Previous shard present", writeShards.contains( minShard ) );
@@ -601,7 +601,6 @@ public class NodeShardAllocationTest {
 
         when( timeService.getCurrentTime() ).thenReturn( returnTime );
 
-        final MutationBatch batch = mock( MutationBatch.class );
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
@@ -631,7 +630,7 @@ public class NodeShardAllocationTest {
         //now verify all 4 are in this group.  This is because the first shard (0,0) (n-1_ may be the only shard other
         //nodes see while we're rolling our state.  This means it should be read and merged from as well
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( rootShard.getShardIndex() );
 
         Collection<Shard> readShards = shardEntryGroup.getReadShards();
 
