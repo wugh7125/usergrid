@@ -147,7 +147,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         Preconditions.checkNotNull( group, "group cannot be null" );
         Preconditions.checkArgument( group.isCompactionPending(), "Compaction is pending" );
         Preconditions
-            .checkArgument( group.shouldCompact( startTime ), "Compaction cannot be run yet.  Ignoring compaction." );
+            .checkArgument( group.shouldCompact( ), "Compaction cannot be run yet.  Ignoring compaction." );
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("Compacting shard group. count is {} ", countAudits.get());
@@ -401,7 +401,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             /**
              * Do the compaction
              */
-            if ( group.shouldCompact( timeService.getCurrentTime() ) ) {
+            if ( group.shouldCompact( ) ) {
                 /**
                  * It's already compacting, don't do anything
                  */

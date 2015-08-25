@@ -50,7 +50,7 @@ public class ShardEntryGroupTest {
 
         assertNull( "No merge target found", shardEntryGroup.getCompactionTarget() );
 
-        assertFalse( "Merge cannot be run with a single shard", shardEntryGroup.shouldCompact( Long.MAX_VALUE ) );
+        assertFalse( "Merge cannot be run with a single shard", shardEntryGroup.shouldCompact() );
     }
 
 
@@ -122,21 +122,9 @@ public class ShardEntryGroupTest {
 
         assertEquals( "Min compaction target found", firstShard, shardEntryGroup.getCompactionTarget() );
 
-        //shouldn't return true, since we haven't passed delta time in the second shard
-        assertFalse( "Merge cannot be run within min time",
-                shardEntryGroup.shouldCompact( firstShard.getCreatedTime() ) );
+        //we should compact these
+        assertTrue( "Merge should be run", shardEntryGroup.shouldCompact(  ) );
 
-        //shouldn't return true, since we haven't passed delta time in the second shard
-        assertFalse( "Merge cannot be run within min time",
-                shardEntryGroup.shouldCompact( secondShard.getCreatedTime() ) );
-
-        //we haven't passed the delta in the neighbor that would be our source, shard2, we shouldn't return true
-        //we read from shard2 and write to shard1
-        assertFalse( "Merge cannot be run with after min time",
-                shardEntryGroup.shouldCompact( firstShard.getCreatedTime()) );
-
-        assertTrue( "Merge should be run with after min time",
-                shardEntryGroup.shouldCompact( secondShard.getCreatedTime()) );
     }
 
 
@@ -208,20 +196,10 @@ public class ShardEntryGroupTest {
 
         assertEquals( "Same shard for merge target", secondShard, shardEntryGroup.getCompactionTarget() );
 
-        //shouldn't return true, since we haven't passed delta time in the second shard
-        assertFalse( "Merge cannot be run within min time",
-                shardEntryGroup.shouldCompact( firstShard.getCreatedTime()  ) );
+        //Should return true, we can merge
+        assertTrue( "Merge cannot be run within min time",
+                shardEntryGroup.shouldCompact() );
 
-        //shouldn't return true, since we haven't passed delta time in the second shard
-        assertFalse( "Merge cannot be run within min time",
-                shardEntryGroup.shouldCompact( secondShard.getCreatedTime()  ) );
-
-
-        assertFalse( "Merge cannot be run within min time",
-                shardEntryGroup.shouldCompact( secondShard.getCreatedTime()  + 1 ) );
-
-        assertTrue( "Merge should be run with after min time",
-                shardEntryGroup.shouldCompact( firstShard.getCreatedTime()  + 1 ) );
     }
 
 
@@ -268,61 +246,61 @@ public class ShardEntryGroupTest {
     @Test
     public void getAllWriteShardsNotPastCompaction() {
 
-        Shard firstShard = new Shard( 1000, 10000, false );
+        Shard ignoredProposedShard = new Shard( 1000, 10000, false );
 
-        Shard secondShard = new Shard( 999, 9000, false );
+        Shard newAllocatedCompactionTarget = new Shard( 999, 9000, false );
 
         Shard compactedShard = new Shard( 900, 8000, true );
 
 
         ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
 
-        boolean result = shardEntryGroup.addShard( firstShard );
+        boolean result = shardEntryGroup.addShard( ignoredProposedShard );
 
         assertTrue( "Shard added", result );
 
-        result = shardEntryGroup.addShard( secondShard );
+        result = shardEntryGroup.addShard( newAllocatedCompactionTarget );
 
-        assertTrue( " Shard added", result );
+        assertTrue( "Shard added", result );
 
         result = shardEntryGroup.addShard( compactedShard );
 
         assertTrue( "Shard added", result );
 
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( firstShard.getCreatedTime()  );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( ignoredProposedShard.getCreatedTime() );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
-        assertTrue( "Root shard present", writeShards.contains( compactedShard ) );
+        assertTrue( "Lowest new shard present", writeShards.contains( newAllocatedCompactionTarget ) );
 
 
-        writeShards = shardEntryGroup.getWriteShards( secondShard.getCreatedTime()  );
+        writeShards = shardEntryGroup.getWriteShards( newAllocatedCompactionTarget.getCreatedTime() );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
-        assertTrue( "Third shard present", writeShards.contains( compactedShard ) );
+        assertTrue( "Lowest new shard present", writeShards.contains( newAllocatedCompactionTarget ) );
 
 
         /**
          * Not the max created timestamp, shouldn't return less than all shards
          */
-        writeShards = shardEntryGroup.getWriteShards( secondShard.getCreatedTime() + 1  );
+        writeShards = shardEntryGroup.getWriteShards( newAllocatedCompactionTarget.getCreatedTime() + 1  );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
 
-        assertTrue( "Second shard present", writeShards.contains( compactedShard ) );
+        assertTrue( "Second shard present", writeShards.contains( newAllocatedCompactionTarget ) );
 
 
-        assertEquals( "Compaction target correct", secondShard, shardEntryGroup.getCompactionTarget() );
+        assertEquals( "Compaction target correct", newAllocatedCompactionTarget, shardEntryGroup.getCompactionTarget() );
 
-        writeShards = shardEntryGroup.getWriteShards( firstShard.getCreatedTime() + 1  );
+        writeShards = shardEntryGroup.getWriteShards( ignoredProposedShard.getCreatedTime() + 1  );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
 
-        assertTrue( "Second shard present", writeShards.contains( secondShard ) );
+        assertTrue( "Second shard present", writeShards.contains( newAllocatedCompactionTarget ) );
     }
 
 

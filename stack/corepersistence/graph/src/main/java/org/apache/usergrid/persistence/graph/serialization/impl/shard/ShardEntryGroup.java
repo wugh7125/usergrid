@@ -170,7 +170,7 @@ public class ShardEntryGroup {
          * The shards in this set can be combined, we should only write to the compaction target to avoid
          * adding data to other shards
          */
-        if ( !isTooSmallToCompact() && shouldCompact( currentTime ) ) {
+        if ( !isTooSmallToCompact() && shouldCompact(  ) ) {
 
             final Shard compactionTarget = getCompactionTarget();
 
@@ -278,11 +278,9 @@ public class ShardEntryGroup {
     /**
      * Returns true if the newest created shard is path the currentTime - delta
      *
-     * @param currentTime The current system time in milliseconds
-     *
      * @return True if these shards can safely be combined into a single shard, false otherwise
      */
-    public boolean shouldCompact( final long currentTime ) {
+    public boolean shouldCompact( ) {
 
         /**
          * We don't have enough shards to compact, ignore
