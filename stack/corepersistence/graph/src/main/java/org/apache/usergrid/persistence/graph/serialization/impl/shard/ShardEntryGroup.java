@@ -44,8 +44,6 @@ public class ShardEntryGroup {
 
     private List<Shard> shards;
 
-    private long maxCreatedTime;
-
     private Shard compactionTarget;
 
     private Shard rootShard;
@@ -56,11 +54,12 @@ public class ShardEntryGroup {
      */
     public ShardEntryGroup() {
         this.shards = new ArrayList<>();
-        this.maxCreatedTime = 0;
     }
 
 
     /**
+     * Shard insertion order is assumed to be  from Shard.shardIndex == Long.MAX to Shard.shardIndex == Long.MIN
+     *
      * Only add a shard if it is within the rules require to meet a group.  The rules are outlined below.
      *
      * Case 1)  First shard in the group, always added
@@ -103,15 +102,13 @@ public class ShardEntryGroup {
     private void addShardInternal( final Shard shard ) {
         shards.add( shard );
 
-        maxCreatedTime = Math.max( maxCreatedTime, shard.getCreatedTime() );
-
         //we're changing our structure, unset the compaction target
         compactionTarget = null;
     }
 
 
     /**
-     * Return the minum shard based on time indexes
+     * Return the minimum shard based on time indexes
      */
     public Shard getMinShard() {
         final int size = shards.size();
@@ -162,9 +159,9 @@ public class ShardEntryGroup {
 
 
     /**
-     * Get the entries, with the max shard time being first. We write to all shards until they're migrated
+     * Get the entries, with the earliest allocated uncompacted shard being first
      */
-    public Collection<Shard> getWriteShards( long currentTime ) {
+    public Collection<Shard> getWriteShards() {
 
         /**
          * The shards in this set can be combined, we should only write to the compaction target to avoid
@@ -178,6 +175,7 @@ public class ShardEntryGroup {
 
             return Collections.singleton( compactionTarget );
         }
+
 
         final Shard staticShard = getRootShard();
 
@@ -242,18 +240,22 @@ public class ShardEntryGroup {
             return null;
         }
 
-        //Start seeking from the end of our group.  The first shard we encounter that is not compacted is our
-        // compaction target
+        Shard compactionCandidate = null;
+
+        //Start seeking from the end of our group.  The lowest timestamp uncompacted shard is our target
         //NOTE: This does not mean we can compact, rather it's just an indication that we have a target set.
-        for ( int i = lastIndex - 1; i > -1; i-- ) {
-            final Shard compactionCandidate = shards.get( i );
+        for ( int i = 0; i < lastIndex; i++ ) {
+            final Shard currentTargetCompaction = shards.get( i );
 
 
-            if ( !compactionCandidate.isCompacted() ) {
-                compactionTarget = compactionCandidate;
-                break;
+            //the shard is not compacted, and we've either never set a candidate
+            //or the candidate has a higher created timestamp than our current shard
+            if ( !currentTargetCompaction.isCompacted() && (compactionCandidate == null || currentTargetCompaction.getCreatedTime() < compactionCandidate.getCreatedTime())) {
+                compactionCandidate = currentTargetCompaction;
             }
         }
+
+        compactionTarget = compactionCandidate;
 
         return compactionTarget;
     }
@@ -310,7 +312,6 @@ public class ShardEntryGroup {
     public String toString() {
         return "ShardEntryGroup{" +
             "shards=" + shards +
-            ", maxCreatedTime=" + maxCreatedTime +
             ", compactionTarget=" + compactionTarget +
             '}';
     }

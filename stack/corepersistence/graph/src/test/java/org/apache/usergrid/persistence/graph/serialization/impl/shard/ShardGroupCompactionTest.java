@@ -98,14 +98,15 @@ public class ShardGroupCompactionTest {
 
         DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
 
-        try {
-            compaction.compact( this.scope, directedEdgeMeta, group );
-            fail( "I should not reach this point" );
-        }
-        catch ( Throwable t ) {
-            assertEquals( "Correct error message returned", "Compaction cannot be run yet.  Ignoring compaction.",
-                    t.getMessage() );
-        }
+        fail("Write more of these tests");
+//        try {
+//            compaction.compact( this.scope, directedEdgeMeta, group );
+//            fail( "I should not reach this point" );
+//        }
+//        catch ( Throwable t ) {
+//            assertEquals( "Correct error message returned", "Compaction cannot be run yet.  Ignoring compaction.",
+//                    t.getMessage() );
+//        }
     }
 
 

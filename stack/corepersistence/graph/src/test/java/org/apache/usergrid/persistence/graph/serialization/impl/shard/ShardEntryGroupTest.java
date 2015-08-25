@@ -55,7 +55,7 @@ public class ShardEntryGroupTest {
 
 
     @Test
-    public void allocatedWithinDelta() {
+    public void minTimestampSelected() {
 
         Shard firstShard = new Shard( 1000, 1000, false );
 
@@ -70,7 +70,8 @@ public class ShardEntryGroupTest {
 
         result = shardEntryGroup.addShard( firstShard );
 
-        assertTrue( " Shard added", result );
+        assertTrue( "Shard added", result );
+
 
 
         assertFalse( "First shard cannot be deleted", shardEntryGroup.canBeDeleted( firstShard ) );
@@ -82,8 +83,6 @@ public class ShardEntryGroupTest {
         assertNull( "Can't compact, no min compacted shard present", shardEntryGroup.getCompactionTarget() );
 
 
-        //TODO, should this blow up in general?  We don't have a compacted shard at the lower bounds,
-        // which shouldn't be allowed
 
     }
 
@@ -123,9 +122,49 @@ public class ShardEntryGroupTest {
         assertEquals( "Min compaction target found", firstShard, shardEntryGroup.getCompactionTarget() );
 
         //we should compact these
-        assertTrue( "Merge should be run", shardEntryGroup.shouldCompact(  ) );
+        assertTrue( "Merge should be run", shardEntryGroup.shouldCompact() );
 
     }
+
+
+
+    @Test
+    public void lowerTimestampHigherShard() {
+
+        Shard firstShard = new Shard( 1100, 1001, false );
+
+        //should be compacted away. Even though it has a closer value, it's a higher timestamp, so wasn't written first
+        Shard secondShard = new Shard( 1000, 1000, false );
+
+        Shard compactedShard = new Shard( 500, 200, true );
+
+
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+
+        boolean result = shardEntryGroup.addShard( firstShard );
+
+        assertTrue( "Shard added", result );
+
+        result = shardEntryGroup.addShard( secondShard );
+
+        assertTrue( "Shard added", result );
+
+        result = shardEntryGroup.addShard( compactedShard );
+
+        assertTrue( "Shard added", result );
+
+
+
+        assertFalse( "First shard cannot be deleted", shardEntryGroup.canBeDeleted( secondShard  ) );
+
+        assertTrue( "Second shard can be deleted", shardEntryGroup.canBeDeleted( firstShard  ) );
+
+        assertEquals( "Can't compact, no min compacted shard present", secondShard, shardEntryGroup.getCompactionTarget() );
+
+
+
+    }
+
 
 
     @Test
@@ -268,14 +307,14 @@ public class ShardEntryGroupTest {
         assertTrue( "Shard added", result );
 
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( ignoredProposedShard.getCreatedTime() );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
         assertTrue( "Lowest new shard present", writeShards.contains( newAllocatedCompactionTarget ) );
 
 
-        writeShards = shardEntryGroup.getWriteShards( newAllocatedCompactionTarget.getCreatedTime() );
+        writeShards = shardEntryGroup.getWriteShards( );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
@@ -285,7 +324,7 @@ public class ShardEntryGroupTest {
         /**
          * Not the max created timestamp, shouldn't return less than all shards
          */
-        writeShards = shardEntryGroup.getWriteShards( newAllocatedCompactionTarget.getCreatedTime() + 1  );
+        writeShards = shardEntryGroup.getWriteShards(  );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
@@ -295,7 +334,7 @@ public class ShardEntryGroupTest {
 
         assertEquals( "Compaction target correct", newAllocatedCompactionTarget, shardEntryGroup.getCompactionTarget() );
 
-        writeShards = shardEntryGroup.getWriteShards( ignoredProposedShard.getCreatedTime() + 1  );
+        writeShards = shardEntryGroup.getWriteShards( );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 

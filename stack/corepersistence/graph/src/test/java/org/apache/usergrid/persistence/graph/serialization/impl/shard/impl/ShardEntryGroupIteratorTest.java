@@ -96,14 +96,14 @@ public class ShardEntryGroupIteratorTest {
         assertTrue( "Min shard present", readShards.contains( minShard ) );
 
 
-        Collection<Shard> writeShards = group.getWriteShards( 0 );
+        Collection<Shard> writeShards = group.getWriteShards( );
 
         assertEquals( "Min shard present", 1, writeShards.size() );
 
         assertTrue( "Min shard present", writeShards.contains( minShard ) );
 
 
-        writeShards = group.getWriteShards( Long.MAX_VALUE );
+        writeShards = group.getWriteShards( );
 
         assertEquals( "Min shard present", 1, writeShards.size() );
 
@@ -181,14 +181,14 @@ public class ShardEntryGroupIteratorTest {
         assertTrue( "shardGroup3Shard1 shard present", readShards.contains( shardGroup3Shard1 ) );
 
 
-        Collection<Shard> writeShards = group.getWriteShards( 0 );
+        Collection<Shard> writeShards = group.getWriteShards( );
 
         assertEquals( "Min shard present", 1, writeShards.size() );
 
 
         assertTrue( "shardGroup3Shard1 shard present", writeShards.contains( shardGroup3Shard1 ) );
 
-        writeShards = group.getWriteShards( shardGroup3Shard3.getCreatedTime() + delta );
+        writeShards = group.getWriteShards( );
 
         assertEquals( "Min shard present", 1, writeShards.size() );
 
@@ -222,14 +222,14 @@ public class ShardEntryGroupIteratorTest {
         assertTrue( "shardGroup2Shard2 shard present", readShards.contains( shardGroup2Shard2 ) );
 
 
-        writeShards = group.getWriteShards( 0 );
+        writeShards = group.getWriteShards( );
 
         assertEquals( "Min shard present", 1, writeShards.size() );
 
         assertTrue( "shardGroup2Shard1 shard present", writeShards.contains( shardGroup2Shard1 ) );
 
 
-        writeShards = group.getWriteShards( shardGroup2Shard2.getCreatedTime() + delta + 1 );
+        writeShards = group.getWriteShards( );
 
         assertEquals( "Both shards present", 1, writeShards.size() );
 
@@ -258,14 +258,14 @@ public class ShardEntryGroupIteratorTest {
         assertTrue( "shardGroup1Shard2 shard present", readShards.contains( shardGroup1Shard2 ) );
 
 
-        writeShards = group.getWriteShards( 0 );
+        writeShards = group.getWriteShards( );
 
         assertEquals( "Min shard present", 1, writeShards.size() );
 
         assertTrue( "shardGroup1Shard1 shard present", writeShards.contains( shardGroup1Shard1 ) );
 
 
-        writeShards = group.getWriteShards( shardGroup1Shard3.getCreatedTime() + delta + 1 );
+        writeShards = group.getWriteShards( );
 
         assertEquals( "Both shards present", 1, writeShards.size() );
 

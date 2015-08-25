@@ -540,11 +540,14 @@ public class NodeShardAllocationTest {
         //now verify all 4 are in this group.  This is because the first shard (0,0) (n-1_ may be the only shard other
         //nodes see while we're rolling our state.  This means it should be read and merged from as well
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( minTime  );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards(  );
 
         assertEquals( "Shard size as expected", 1, writeShards.size() );
 
-        assertTrue( writeShards.contains( compactedShard ) );
+        /**
+         * Here we should get "futureShard2" it is the first allocated uncompacted shard, and therefore should be the shard that is used.
+         */
+        assertTrue( "Minimum allocated new shard", writeShards.contains( futureShard2 ) );
 
 
         Collection<Shard> readShards = shardEntryGroup.getReadShards();
@@ -552,24 +555,26 @@ public class NodeShardAllocationTest {
         assertEquals( "Shard size as expected", 2, readShards.size() );
 
         assertTrue( readShards.contains( futureShard1 ) );
+        assertTrue( readShards.contains( futureShard2 ) );
+        assertTrue( readShards.contains( futureShard3 ) );
         assertTrue( readShards.contains( compactedShard ) );
 
 
-        assertTrue( "Shards present", result.hasNext() );
+        assertTrue( "Next shard group present", result.hasNext() );
 
         shardEntryGroup = result.next();
 
 
-        writeShards = shardEntryGroup.getWriteShards( minTime  );
+        writeShards = shardEntryGroup.getWriteShards(  );
 
 
         assertTrue( "Previous shard present", writeShards.contains( minShard ) );
 
 
-        writeShards = shardEntryGroup.getReadShards();
+        readShards = shardEntryGroup.getReadShards();
 
 
-        assertTrue( "Previous shard present", writeShards.contains( minShard ) );
+        assertTrue( "Previous shard present", readShards.contains( minShard ) );
 
 
         assertFalse( "No shards left", result.hasNext() );
@@ -609,19 +614,6 @@ public class NodeShardAllocationTest {
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( nodeId, type, subType );
 
 
-        /**
-         * Mock up returning an empty iterator, our audit shouldn't create a new shard
-         */
-        when( edgeShardSerialization
-                .getShardMetaDataLocal( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
-                .thenReturn( Collections.<Shard>emptyList().iterator() );
-
-
-        ArgumentCaptor<Shard> shardArgumentCaptor = ArgumentCaptor.forClass( Shard.class );
-
-        when( edgeShardSerialization
-                .writeShardMeta( same( scope ), shardArgumentCaptor.capture(), same( directedEdgeMeta ) ) )
-                .thenReturn( batch );
 
 
         final Iterator<ShardEntryGroup> result =
@@ -635,14 +627,11 @@ public class NodeShardAllocationTest {
         assertEquals( "Shard size expected", 1, shardEntryGroup.entrySize() );
 
 
-        //ensure we persisted the new shard.
-        assertEquals( "Root shard was persisted", rootShard, shardArgumentCaptor.getValue() );
-
 
         //now verify all 4 are in this group.  This is because the first shard (0,0) (n-1_ may be the only shard other
         //nodes see while we're rolling our state.  This means it should be read and merged from as well
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( timeService.getCurrentTime() );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( );
 
         Collection<Shard> readShards = shardEntryGroup.getReadShards();
 
