@@ -92,11 +92,12 @@ public interface GraphFig extends GuicyFig {
     @Key( SHARD_SIZE )
     long getShardSize();
 
-    @Default( "10" )
+    @Default( "1" )
+//    @Default( "10" )
     @Key( SHARD_AUDIT_WORKERS )
     int getShardAuditWorkerCount();
 
-    @Default( "1000" )
+    @Default( "1" )
     @Key( SHARD_AUDIT_QUEUE_SIZE )
     int getShardAuditWorkerQueueSize();
 

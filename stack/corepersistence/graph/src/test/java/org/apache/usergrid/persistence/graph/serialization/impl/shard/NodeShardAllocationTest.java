@@ -440,6 +440,9 @@ public class NodeShardAllocationTest {
                 .getEdgesFromSourceByTargetType( same( edgeColumnFamilies ), same( scope ), any( SearchByIdType.class ),
                         any( Collection.class ) ) ).thenReturn( edgeIterator );
 
+        //mock up empty shard read return
+        when(edgeShardSerialization.getShardMetaDataLocal( same(scope), any(Optional.class), any(DirectedEdgeMeta.class)  )).thenReturn( Collections.singleton(
+            futureShard).iterator() );
 
         final boolean result = approximation.auditShard( scope, shardEntryGroup, targetEdgeMeta );
 

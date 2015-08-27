@@ -260,6 +260,25 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             throw new RuntimeException( "Unable to connect to casandra", e );
         }
 
+        //now re-load again, if our shard we allocated is not the compaction target, then we delete it
+        final Iterator<ShardEntryGroup> currentStateIterator =
+            getCurrentStateIterator( scope, lastLoadedShardEntryGroup, directedEdgeMeta );
+
+
+        if ( !currentStateIterator.hasNext() ) {
+            logger.warn( "Could not read our shard entries.  Our state is unknown, short circuiting" );
+            return false;
+        }
+
+        final ShardEntryGroup currentStateGroup = currentStateIterator.next();
+
+        //we're not the target of compaction, remove ourselves
+        if ( !newShard.equals( currentStateGroup.getCompactionTarget() ) ) {
+            logger.debug("Our proposed shard is not the comaction target.  Removing shard {}", newShard);
+            this.edgeShardSerialization.removeShardMeta( scope, newShard, directedEdgeMeta );
+        }
+
+
         return true;
     }
 
@@ -314,10 +333,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             return Collections.<ShardEntryGroup>emptyList().iterator();
         }
 
+        logger.debug( "Loading current shard state for shards starting at {}", start );
+
         final Iterator<Shard> shards = this.edgeShardSerialization
             .getShardMetaDataLocal( scope, Optional.fromNullable( start ), directedEdgeMeta );
 
-        if(!shards.hasNext()){
+        if ( !shards.hasNext() ) {
             return Collections.<ShardEntryGroup>emptyList().iterator();
         }
 

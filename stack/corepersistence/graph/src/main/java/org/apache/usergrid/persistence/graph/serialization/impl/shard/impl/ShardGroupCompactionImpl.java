@@ -322,7 +322,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         catch ( RejectedExecutionException ree ) {
 
             //ignore, if this happens we don't care, we're saturated, we can check later
-            LOG.error( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
+            LOG.info( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
 
             return Futures.immediateFuture( AuditResult.NOT_CHECKED );
         }

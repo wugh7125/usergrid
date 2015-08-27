@@ -173,17 +173,21 @@ public class GraphManagerShardConsistencyIT {
         final int numWorkersPerInjector = 1;
 
 
+        final long expectedShardCount = 4;
+
         /**
-         * Do 4x shard size so we should have approximately 4 shards
+         * Do 4x expected shard size so we have 4 shards
          */
-        final long numberOfEdges = shardSize * 4;
+        final long numberOfEdges = shardSize * expectedShardCount;
+
+
 
 
         final long workerWriteLimit = numberOfEdges / numWorkersPerInjector;
 
 
 
-        final long expectedShardCount = numberOfEdges/shardSize;
+
 
 
         final ListeningExecutorService
