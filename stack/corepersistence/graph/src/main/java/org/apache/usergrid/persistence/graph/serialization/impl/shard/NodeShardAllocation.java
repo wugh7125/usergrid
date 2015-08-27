@@ -42,8 +42,8 @@ public interface NodeShardAllocation {
      * @param directedEdgeMeta The directed edge metadata to use
      * @return A list of all shards <= the current shard.  This will always return 0l if no shards are allocated
      */
-    Iterator<ShardEntryGroup> getShards( final ApplicationScope scope, Optional<Shard> maxShardId,
-                                         final DirectedEdgeMeta directedEdgeMeta );
+    Iterator<ShardEntryGroup> getShardsLocal( final ApplicationScope scope, Optional<Shard> maxShardId,
+                                              final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**

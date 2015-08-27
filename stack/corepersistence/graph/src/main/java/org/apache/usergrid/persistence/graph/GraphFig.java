@@ -80,7 +80,11 @@ public interface GraphFig extends GuicyFig {
     int getRepairConcurrentSize();
 
 
-    @Default( ".10" )
+    /**
+     * A 1% repair chance.  On average we'll check to repair on 1 out of every 100 reads
+     * @return
+     */
+    @Default( ".01" )
     @Key( SHARD_REPAIR_CHANCE )
     double getShardRepairChance();
 
@@ -120,12 +124,5 @@ public interface GraphFig extends GuicyFig {
     @Default( "CL_LOCAL_QUORUM" )
     @Key( SHARD_READ_CONSISTENCY )
     String getShardReadConsistency();
-
-    /**
-     * Get the consistency level for performing a shard audit
-     */
-    @Default( "CL_EACH_QUORUM" )
-    @Key( SHARD_AUDIT_CONSISTENCY )
-    String getShardAuditConsistency();
 }
 

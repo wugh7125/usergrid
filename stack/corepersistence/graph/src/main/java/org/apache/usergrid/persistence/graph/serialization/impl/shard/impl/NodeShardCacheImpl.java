@@ -24,12 +24,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
@@ -160,7 +156,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
     private CacheEntry getShards( final CacheKey key ) {
         final Iterator<ShardEntryGroup> edges =
-            nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta );
+            nodeShardAllocation.getShardsLocal( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta );
 
         final CacheEntry cacheEntry = new CacheEntry( edges );
 

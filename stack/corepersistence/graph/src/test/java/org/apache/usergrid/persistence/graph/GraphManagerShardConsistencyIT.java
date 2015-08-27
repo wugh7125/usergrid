@@ -98,10 +98,6 @@ public class GraphManagerShardConsistencyIT {
 
     protected Object originalShardSize;
 
-    protected Object originalShardTimeout;
-
-    protected Object originalShardDelta;
-
 
     @Before
     public void setupOrg() {
@@ -158,8 +154,8 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
-//        final int numInjectors = 2;
-        final int numInjectors = 1;
+        final int numInjectors = 2;
+//        final int numInjectors = 1;
 
         /**
          * create 3 injectors.  This way all the caches are independent of one another.  This is the same as
@@ -173,11 +169,8 @@ public class GraphManagerShardConsistencyIT {
         final long shardSize = graphFig.getShardSize();
 
 
-        //we don't want to starve the cass runtime since it will be on the same box. Only take 50% of processing
-        // power for writes
-        final int numProcessors = Runtime.getRuntime().availableProcessors() / 2;
 
-        final int numWorkersPerInjector = numProcessors / numInjectors;
+        final int numWorkersPerInjector = 1;
 
 
         /**
@@ -200,9 +193,6 @@ public class GraphManagerShardConsistencyIT {
         final AtomicLong writeCounter = new AtomicLong();
 
 
-        //min stop time the min delta + 1 cache cycle timeout
-        final long minExecutionTime = 10000;
-
 
         log.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
                 numInjectors );
@@ -212,13 +202,15 @@ public class GraphManagerShardConsistencyIT {
 
 
 
+        //create multiple instances of injectors.  This simulates multiple nodes, so that we can ensure we're not
+        //sharing state in our guice DI
         for ( Injector injector : injectors ) {
             final GraphManagerFactory gmf = injector.getInstance( GraphManagerFactory.class );
 
 
             for ( int i = 0; i < numWorkersPerInjector; i++ ) {
                 Future<Boolean> future = executor
-                        .submit( new Worker( gmf, generator, workerWriteLimit, minExecutionTime, writeCounter ) );
+                        .submit( new Worker( gmf, generator, workerWriteLimit, writeCounter ) );
 
                 futures.add( future );
             }
@@ -328,7 +320,9 @@ public class GraphManagerShardConsistencyIT {
 
             //we're done
             if ( compactedCount >= expectedShardCount ) {
-                log.info( "All compactions complete, sleeping" );
+                log.info( "All compactions complete.  Compacted shards are {}.  Expected at least expectedShardCount" );
+
+                assertEquals("Compacted should match expected", expectedShardCount, compactedCount);
 
 //                final Object mutex = new Object();
 //
@@ -385,16 +379,13 @@ public class GraphManagerShardConsistencyIT {
         private final GraphManagerFactory factory;
         private final EdgeGenerator generator;
         private final long writeLimit;
-        private final long minExecutionTime;
         private final AtomicLong writeCounter;
 
 
-        private Worker( final GraphManagerFactory factory, final EdgeGenerator generator, final long writeLimit,
-                        final long minExecutionTime, final AtomicLong writeCounter ) {
+        private Worker( final GraphManagerFactory factory, final EdgeGenerator generator, final long writeLimit, final AtomicLong writeCounter ) {
             this.factory = factory;
             this.generator = generator;
             this.writeLimit = writeLimit;
-            this.minExecutionTime = minExecutionTime;
             this.writeCounter = writeCounter;
         }
 
@@ -404,10 +395,9 @@ public class GraphManagerShardConsistencyIT {
             GraphManager manager = factory.createEdgeManager( scope );
 
 
-            final long startTime = System.currentTimeMillis();
+            long i;
 
-
-            for ( long i = 0; i < writeLimit || System.currentTimeMillis() - startTime < minExecutionTime; i++ ) {
+            for ( i = 0; i < writeLimit ; i++ ) {
 
                 Edge edge = generator.newEdge();
 
@@ -427,6 +417,8 @@ public class GraphManagerShardConsistencyIT {
                     log.info( "   Wrote: " + i );
                 }
             }
+
+            log.info( "Completed writing {} edges on worker", i );
 
 
             return true;
@@ -528,12 +520,12 @@ public class GraphManagerShardConsistencyIT {
         /**
          * Create a new edge to persiste
          */
-        public Edge newEdge();
+        Edge newEdge();
 
         /**
          * Perform the search returning an observable edge
          */
-        public Observable<Edge> doSearch( final GraphManager manager );
+        Observable<Edge> doSearch( final GraphManager manager );
     }
 }
 

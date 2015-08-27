@@ -47,12 +47,8 @@ public class ShardConsistencyImpl implements ShardConsistency{
 
     @Override
     public ConsistencyLevel getShardReadConsistency() {
-        return null;
+        return ConsistencyLevel.valueOf( graphFig.getShardReadConsistency() );
     }
 
 
-    @Override
-    public ConsistencyLevel getShardAuditConsistency() {
-        return null;
-    }
 }

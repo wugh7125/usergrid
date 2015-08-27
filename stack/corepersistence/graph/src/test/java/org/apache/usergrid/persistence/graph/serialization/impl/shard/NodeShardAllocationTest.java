@@ -36,7 +36,6 @@ import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -526,7 +525,7 @@ public class NodeShardAllocationTest {
 
 
         final Iterator<ShardEntryGroup> result =
-                approximation.getShards( scope, Optional.<Shard>absent(), directedEdgeMeta );
+                approximation.getShardsLocal( scope, Optional.<Shard>absent(), directedEdgeMeta );
 
 
         assertTrue( "Shards present", result.hasNext() );
@@ -616,7 +615,7 @@ public class NodeShardAllocationTest {
 
 
         final Iterator<ShardEntryGroup> result =
-                approximation.getShards( scope, Optional.<Shard>absent(), directedEdgeMeta );
+                approximation.getShardsLocal( scope, Optional.<Shard>absent(), directedEdgeMeta );
 
 
         ShardEntryGroup shardEntryGroup = result.next();

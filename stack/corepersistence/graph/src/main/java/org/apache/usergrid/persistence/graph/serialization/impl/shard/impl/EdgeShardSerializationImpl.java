@@ -116,28 +116,6 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
     public Iterator<Shard> getShardMetaDataLocal( final ApplicationScope scope, final Optional<Shard> start,
                                                   final DirectedEdgeMeta metaData ) {
 
-        return getShardMetaDataInternal( scope, start, metaData, shardConsistency.getShardReadConsistency() );
-    }
-
-
-    @Override
-    public Iterator<Shard> getShardMetaDataAudit( final ApplicationScope scope, final Optional<Shard> start,
-                                                  final DirectedEdgeMeta directedEdgeMeta ) {
-        return getShardMetaDataInternal( scope, start, directedEdgeMeta, shardConsistency.getShardAuditConsistency() );
-    }
-
-
-    /**
-     * Get the shard meta data, allowing the caller to specify the consistency level
-     * @param scope
-     * @param start
-     * @param metaData
-     * @param consistencyLevel
-     * @return
-     */
-    private Iterator<Shard> getShardMetaDataInternal( final ApplicationScope scope, final Optional<Shard> start,
-                                                      final DirectedEdgeMeta metaData,
-                                                      final ConsistencyLevel consistencyLevel ) {
 
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateDirectedEdgeMeta( metaData );
@@ -162,12 +140,14 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
         final RowQuery<ScopedRowKey<DirectedEdgeMeta>, Long> query =
-            keyspace.prepareQuery( EDGE_SHARDS ).setConsistencyLevel( consistencyLevel ).getKey( rowKey )
+            keyspace.prepareQuery( EDGE_SHARDS ).setConsistencyLevel( shardConsistency.getShardReadConsistency()  ).getKey( rowKey )
                     .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
 
         return new ColumnNameIterator<>( query, COLUMN_PARSER, false );
     }
+
+
 
 
     @Override

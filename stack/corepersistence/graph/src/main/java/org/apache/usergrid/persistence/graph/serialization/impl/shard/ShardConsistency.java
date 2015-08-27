@@ -38,9 +38,4 @@ public interface ShardConsistency {
      */
     ConsistencyLevel getShardReadConsistency();
 
-    /**
-     * Get the consistency level for performing a shard audit
-     * @return
-     */
-    ConsistencyLevel getShardAuditConsistency();
 }
