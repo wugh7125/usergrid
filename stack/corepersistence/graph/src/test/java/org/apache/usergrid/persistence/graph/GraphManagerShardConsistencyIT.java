@@ -316,6 +316,7 @@ public class GraphManagerShardConsistencyIT {
 
                 log.info( "Compaction pending status for group {} is {}", group, group.isCompactionPending() );
 
+                //we don't count compaction pending groups, we need to ensure they're completed compacting before testing
                 if ( !group.isCompactionPending() ) {
                     compactedCount++;
                 }

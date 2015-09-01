@@ -141,7 +141,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                                      final ShardEntryGroup group ) {
 
 
-        final long startTime = timeService.getCurrentTime();
 
 
         Preconditions.checkNotNull( group, "group cannot be null" );

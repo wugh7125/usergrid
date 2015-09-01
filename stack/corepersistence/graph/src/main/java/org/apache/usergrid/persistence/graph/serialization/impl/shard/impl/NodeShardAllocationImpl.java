@@ -152,10 +152,17 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final ShardEntryGroup shardEntryGroup = shardEntryGroupIterator.next();
 
+        //someone has already allocated, it's a different group.  Move on, nothing to see here
+        if ( !shardEntryGroup.equals( lastLoadedShardEntryGroup ) ) {
+            logger.info( "Stale shard group on audit or group {} found, ignoring", lastLoadedShardEntryGroup );
+            return false;
+        }
+
         /**
          * Nothing to do, it's been created very recently, we don't create a new one
          */
         if ( shardEntryGroup.isCompactionPending() ) {
+            logger.info("Shard group {} is compacting, skipping", lastLoadedShardEntryGroup);
             return false;
         }
 
@@ -225,8 +232,9 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * element will suffice.
          */
 
+        long i = 1;
 
-        for ( long i = 1; edges.hasNext(); i++ ) {
+        for ( ; edges.hasNext(); i++ ) {
             //we hit a pivot shard, set it since it could be the last one we encounter
             if ( i % shardSize == 0 ) {
                 marked = edges.next();
@@ -235,6 +243,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
                 edges.next();
             }
         }
+
+        logger.debug( "Iterated {} edges to find the last marked edge", i );
 
 
         /**
@@ -249,7 +259,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final Shard newShard = new Shard( marked.getTimestamp(), createTimestamp, false );
 
-        logger.info( "Allocating new shard {} for edge meta {}", newShard, directedEdgeMeta );
+        logger.info( "Allocating new shard {} for edge meta {} into group {}", newShard, directedEdgeMeta, shardEntryGroup );
 
         final MutationBatch batch = this.edgeShardSerialization.writeShardMeta( scope, newShard, directedEdgeMeta );
 
@@ -274,7 +284,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         //we're not the target of compaction, remove ourselves
         if ( !newShard.equals( currentStateGroup.getCompactionTarget() ) ) {
-            logger.debug("Our proposed shard is not the comaction target.  Removing shard {}", newShard);
+            logger.debug( "Our proposed shard is not the comaction target.  Removing shard {}", newShard );
             this.edgeShardSerialization.removeShardMeta( scope, newShard, directedEdgeMeta );
         }
 

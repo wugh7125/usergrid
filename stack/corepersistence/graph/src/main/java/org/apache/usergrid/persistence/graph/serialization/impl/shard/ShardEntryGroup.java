@@ -314,6 +314,27 @@ public class ShardEntryGroup {
 
 
     @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof ShardEntryGroup ) ) {
+            return false;
+        }
+
+        final ShardEntryGroup that = ( ShardEntryGroup ) o;
+
+        return shards.equals( that.shards );
+    }
+
+
+    @Override
+    public int hashCode() {
+        return shards.hashCode();
+    }
+
+
+    @Override
     public String toString() {
         return "ShardEntryGroup{" +
             "shards=" + shards +
