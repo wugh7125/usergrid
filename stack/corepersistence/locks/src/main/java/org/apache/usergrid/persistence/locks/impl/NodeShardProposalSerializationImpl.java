@@ -18,9 +18,28 @@
 package org.apache.usergrid.persistence.locks.impl;
 
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.UUID;
 
+import org.apache.cassandra.db.marshal.BytesType;
+import org.apache.cassandra.db.marshal.UUIDType;
+
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.StringRowCompositeSerializer;
 import org.apache.usergrid.persistence.locks.LockId;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.Column;
+import com.netflix.astyanax.model.ColumnList;
+import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
 /**
@@ -28,21 +47,163 @@ import org.apache.usergrid.persistence.locks.LockId;
  */
 public class NodeShardProposalSerializationImpl implements NodeShardProposalSerialization {
 
+    private static final StringRowCompositeSerializer STRING_SER = StringRowCompositeSerializer.get();
 
-    @Override
-    public void writeNewValue( final LockId lockId, final UUID proposed, final int expirationInSeconds ) {
+    private static final ScopedRowKeySerializer<String> ROW_KEY_SER = new ScopedRowKeySerializer<>( STRING_SER );
 
+
+    private static final MultiTennantColumnFamily<ScopedRowKey<String>, UUID> CF_MULTI_REGION_LOCKS =
+        new MultiTennantColumnFamily<>( "Multi_Region_Locks", ROW_KEY_SER, UUIDSerializer.get() );
+
+
+    private static final byte[] EMPTY = new byte[0];
+
+
+    protected final Keyspace keyspace;
+    protected final LockConsistency lockConsistency;
+
+
+    public NodeShardProposalSerializationImpl( final Keyspace keyspace, final LockConsistency lockConsistency ) {
+        this.keyspace = keyspace;
+        this.lockConsistency = lockConsistency;
     }
 
 
     @Override
-    public Proposal getProposal( final LockId lockId ) {
-        return null;
+    public LockCandidate writeNewValue( final LockId lockId, final UUID proposed, final int expirationInSeconds ) {
+
+        final MutationBatch batch =
+            keyspace.prepareMutationBatch().withConsistencyLevel( lockConsistency.getShardWriteConsistency() );
+
+        final Id applicationId = lockId.getApplicationScope().getApplication();
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( applicationId, lockId.generateKey() );
+
+        //put the column with expiration
+        batch.withRow( CF_MULTI_REGION_LOCKS, rowKey ).putColumn( proposed, EMPTY, expirationInSeconds );
+
+
+        try {
+            batch.execute();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to cassandra", e );
+        }
+
+
+        return readState( rowKey );
+    }
+
+
+    @Override
+    public LockCandidate ackProposed( final LockId lockId, final UUID proposed, final UUID seen,
+                                      final int expirationInSeconds ) {
+
+        final MutationBatch batch =
+            keyspace.prepareMutationBatch().withConsistencyLevel( lockConsistency.getShardWriteConsistency() );
+
+        final Id applicationId = lockId.getApplicationScope().getApplication();
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( applicationId, lockId.generateKey() );
+
+
+        //put the column with expiration
+        batch.withRow( CF_MULTI_REGION_LOCKS, rowKey ).putColumn( proposed, seen, expirationInSeconds );
+
+
+        try {
+            batch.execute();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to cassandra", e );
+        }
+
+
+        return readState( rowKey );
+    }
+
+
+    /**
+     * Read the lock state from the column family
+     */
+    private LockCandidate readState( final ScopedRowKey<String> rowKey ) {
+        //read the first 2 records
+
+
+        final ColumnList<UUID> results;
+
+        try {
+            results = keyspace.prepareQuery( CF_MULTI_REGION_LOCKS ).getKey( rowKey )
+                              .withColumnRange( ( UUID ) null, null, false, 2 ).execute().getResult();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to cassandra", e );
+        }
+
+
+        //should never happen, sanity check.
+        if ( results.isEmpty() ) {
+            throw new RuntimeException(
+                "Unable to read results from cassandra.  There should be at least 1 result left" );
+        }
+
+
+        final UUID proposedLock = results.getColumnByIndex( 0 ).getName();
+
+        //we have 2 columns, populate the proposal
+        if ( results.size() == 2 ) {
+            final Column<UUID> column = results.getColumnByIndex( 1 );
+
+            final Optional<UUID> secondProposedLock = Optional.of( column.getName() );
+
+            final Optional<UUID> valueSeenBySecond;
+
+            if ( column.hasValue() ) {
+                valueSeenBySecond = Optional.of( column.getUUIDValue() );
+            }
+            else {
+                valueSeenBySecond = Optional.absent();
+            }
+
+            return new LockCandidate( proposedLock, secondProposedLock, valueSeenBySecond );
+        }
+
+        return new LockCandidate( proposedLock, Optional.absent(), Optional.absent() );
     }
 
 
     @Override
     public void delete( final LockId lockId, final UUID proposed ) {
+        final MutationBatch batch =
+            keyspace.prepareMutationBatch().withConsistencyLevel( lockConsistency.getShardWriteConsistency() );
 
+        final Id applicationId = lockId.getApplicationScope().getApplication();
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( applicationId, lockId.generateKey() );
+
+
+        //put the column with expiration
+        batch.withRow( CF_MULTI_REGION_LOCKS, rowKey ).deleteColumn( proposed );
+
+
+        try {
+            batch.execute();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to cassandra", e );
+        }
+    }
+
+
+    @Override
+    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+        //create the CF and sort them by uuid type so time uuid with lowest will be first
+        MultiTennantColumnFamilyDefinition cf =
+            new MultiTennantColumnFamilyDefinition( CF_MULTI_REGION_LOCKS, BytesType.class.getSimpleName(),
+                UUIDType.class.getSimpleName(), UUIDType.class.getSimpleName(),
+                MultiTennantColumnFamilyDefinition.CacheOption.ALL, Optional.of( 1 ) );
+
+
+        return Collections.singleton( cf );
     }
 }

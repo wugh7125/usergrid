@@ -18,7 +18,10 @@
 package org.apache.usergrid.persistence.locks.guice;
 
 
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.persistence.locks.LockManager;
+import org.apache.usergrid.persistence.locks.impl.CassandraLockFig;
 import org.apache.usergrid.persistence.locks.impl.CassandraLockManager;
 import org.apache.usergrid.persistence.locks.impl.NodeShardProposalSerialization;
 import org.apache.usergrid.persistence.locks.impl.NodeShardProposalSerializationImpl;
@@ -33,6 +36,9 @@ public abstract class LockModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
+        //install the lock config
+        install(new GuicyFigModule( CassandraLockFig.class ));
 
         //bind our lockManager
         bind( LockManager.class).to( CassandraLockManager.class );

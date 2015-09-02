@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization.impl.shard;
+package org.apache.usergrid.persistence.locks.impl;
 
 
 import com.netflix.astyanax.model.ConsistencyLevel;
@@ -24,7 +24,7 @@ import com.netflix.astyanax.model.ConsistencyLevel;
 /**
  * Interface for shard consistency levels
  */
-public interface ShardConsistency {
+public interface LockConsistency {
 
     /**
      * Get the consistency level for wiring new shards

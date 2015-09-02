@@ -27,7 +27,7 @@ import com.google.common.base.Optional;
 /**
  * Represents a proposed value
  */
-public class Proposal {
+public class LockCandidate {
 
 
     private final UUID first;
@@ -35,7 +35,7 @@ public class Proposal {
     private final Optional<UUID> secondAcked;
 
 
-    public Proposal( final UUID first, final Optional<UUID> second, final Optional<UUID> secondAcked ) {
+    public LockCandidate( final UUID first, final Optional<UUID> second, final Optional<UUID> secondAcked ) {
         this.first = first;
         this.second = second;
         this.secondAcked = secondAcked;
@@ -91,5 +91,10 @@ public class Proposal {
          */
         return !secondAcked.isPresent();
 
+    }
+
+
+    public UUID getFirst() {
+        return first;
     }
 }

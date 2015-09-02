@@ -57,6 +57,11 @@ public class CassandraMultiRegionLock implements Lock {
 
         //now read back our proposal
 
+        final LockCandidate lockCandidate = nodeShardProposalSerialization.getProposedLock( lockId );
+
+
+
+
 
 
         return false;

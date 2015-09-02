@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
+package org.apache.usergrid.persistence.locks.impl;
 
-
-import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardConsistency;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,24 +27,24 @@ import com.netflix.astyanax.model.ConsistencyLevel;
  * Implementation wrapper for enums
  */
 @Singleton
-public class ShardConsistencyImpl implements ShardConsistency{
+public class LockConsistencyImpl implements LockConsistency {
 
-    private final GraphFig graphFig;
+    private final CassandraLockFig cassandraLockFig;
 
 
     @Inject
-    public ShardConsistencyImpl( final GraphFig graphFig ) {this.graphFig = graphFig;}
+    public LockConsistencyImpl( final CassandraLockFig cassandraLockFig ) {this.cassandraLockFig = cassandraLockFig;}
 
 
     @Override
     public ConsistencyLevel getShardWriteConsistency() {
-        return ConsistencyLevel.valueOf( graphFig.getShardWriteConsistency() );
+        return ConsistencyLevel.valueOf( cassandraLockFig.getMultiRegionLockWriteConsistency() );
     }
 
 
     @Override
     public ConsistencyLevel getShardReadConsistency() {
-        return ConsistencyLevel.valueOf( graphFig.getShardReadConsistency() );
+        return ConsistencyLevel.valueOf( cassandraLockFig.getMultiRegionLockReadConsistency() );
     }
 
 

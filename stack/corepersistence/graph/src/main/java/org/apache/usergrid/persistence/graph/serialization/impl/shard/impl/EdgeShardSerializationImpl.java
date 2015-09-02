@@ -51,7 +51,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.LongSerializer;
 import com.netflix.astyanax.util.RangeBuilder;
@@ -174,7 +173,8 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
         return Collections.singleton(
             new MultiTennantColumnFamilyDefinition( EDGE_SHARDS, BytesType.class.getSimpleName(),
                 ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                .absent() ) );
     }
 
 

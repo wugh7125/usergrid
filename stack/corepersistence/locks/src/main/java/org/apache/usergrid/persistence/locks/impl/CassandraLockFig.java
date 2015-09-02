@@ -15,26 +15,35 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.persistence.locks;
+package org.apache.usergrid.persistence.locks.impl;
 
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
+import org.safehaus.guicyfig.GuicyFig;
+import org.safehaus.guicyfig.Key;
 
 
-/**
- * Key that uniquely represents a lock
- */
-public interface LockId {
+@FigSingleton
+public interface CassandraLockFig extends GuicyFig {
+
+    String READ_CONSISTENT_CL = "usergrid.lock.multiregion.read.cl";
+
+    String WRITE_CONSISTENT_CL = "usergrid.lock.multiregion.write.cl";
+
 
     /**
-     * Generate a string unique key for this lock.  Note that this key can be used by multiple processes
+     * Get multi region write consistency level
      * @return
      */
-    String generateKey();
+    @Default( "CL_EACH_QUORUM" )
+    @Key( WRITE_CONSISTENT_CL )
+    String getMultiRegionLockWriteConsistency();
 
     /**
-     * Get the application scope for the lockId
-     * @return
+     * Get the consistency level for doing reads
      */
-    ApplicationScope getApplicationScope();
+    @Default( "CL_LOCAL_QUORUM" )
+    @Key( READ_CONSISTENT_CL )
+    String getMultiRegionLockReadConsistency();
 }

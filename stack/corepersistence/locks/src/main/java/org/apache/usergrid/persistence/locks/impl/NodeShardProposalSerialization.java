@@ -20,29 +20,36 @@ package org.apache.usergrid.persistence.locks.impl;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.locks.LockId;
 
 
 /**
  * Interface for serializing node shard proposals
  */
-public interface NodeShardProposalSerialization {
+public interface NodeShardProposalSerialization extends Migration {
 
 
     /**
-     * Propose a new shard and return the UUID of the proposal
+     * Propose a new shard and ack shards that are before us
      * @param lockId The key for the locks
      * @param proposed The proposed time uuid key
      * @param expirationInSeconds The time to allow the proposal to live.
+     *
+     * @return The Proposal of the 2 items in the proposal queue
      */
-    void writeNewValue( final LockId lockId, final UUID proposed, final int expirationInSeconds );
+    LockCandidate writeNewValue( final LockId lockId, final UUID proposed, final int expirationInSeconds );
+
 
     /**
-     * Get the proposed locks from the proposed value
-     * @param lockId The key for the locks
+     * Ack the proposal and re-read
+     * @param lockId
+     * @param proposed The proposed uuid we set
+     * @param seen The uuid to set into the seen value
+     * @param expirationInSeconds The time to allow the proposal to live.
      * @return
      */
-    Proposal getProposal(  final LockId lockId);
+    LockCandidate ackProposed(final LockId lockId, final UUID proposed, final UUID seen, final int expirationInSeconds);
 
     /**
      * Remove all the proposals
