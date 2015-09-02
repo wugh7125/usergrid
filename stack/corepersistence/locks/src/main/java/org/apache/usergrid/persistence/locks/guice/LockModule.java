@@ -32,7 +32,7 @@ import com.google.inject.AbstractModule;
 /**
  * Guice configuration of the lock module
  */
-public abstract class LockModule extends AbstractModule {
+public class LockModule extends AbstractModule {
 
     @Override
     protected void configure() {

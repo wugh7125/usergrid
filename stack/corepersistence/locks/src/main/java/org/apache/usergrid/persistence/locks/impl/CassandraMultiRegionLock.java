@@ -53,11 +53,9 @@ public class CassandraMultiRegionLock implements Lock {
 
         Preconditions.checkArgument(expiration > Integer.MAX_VALUE, "Expiration cannot be longer than "  + Integer.MAX_VALUE);
 
-        this.nodeShardProposalSerialization.writeNewValue( lockId, lockUUID, ( int ) expiration );
+        final LockCandidate lockCandidate = this.nodeShardProposalSerialization.writeNewValue( lockId, lockUUID, ( int ) expiration );
 
-        //now read back our proposal
-
-        final LockCandidate lockCandidate = nodeShardProposalSerialization.getProposedLock( lockId );
+        //now check if we need to ack our previous
 
 
 

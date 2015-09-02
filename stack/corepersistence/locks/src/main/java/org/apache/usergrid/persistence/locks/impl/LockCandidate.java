@@ -93,8 +93,4 @@ public class LockCandidate {
 
     }
 
-
-    public UUID getFirst() {
-        return first;
-    }
 }
