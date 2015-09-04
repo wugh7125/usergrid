@@ -72,8 +72,14 @@ public class SystemResourceIT extends AbstractRestIT {
         org.apache.usergrid.rest.test.resource2point0.model.ApiResponse result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
 
         assertNotNull( result );
-        assertNotNull( "ok",result.getStatus() );
+        assertNotNull("ok", result.getStatus());
         assertEquals(((LinkedHashMap) result.getData()).get("count"), count);
+
+        result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
+
+        assertNotNull( result );
+        assertNotNull( "ok",result.getStatus() );
+        assertEquals(((LinkedHashMap) result.getData()).get("count"), 0);
     }
 
 

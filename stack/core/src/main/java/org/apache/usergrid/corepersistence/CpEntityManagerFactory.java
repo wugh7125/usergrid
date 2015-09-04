@@ -52,7 +52,9 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.OrganizationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -346,8 +348,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new IllegalArgumentException("Can't delete from management app");
         }
 
-        //EventBuilder eventBuilder = injector.getInstance(EventBuilder.class);
-        Observable appObservable = Observable.just(applicationScope);
+        GraphManagerFactory graphManagerFactory = injector.getInstance(GraphManagerFactory.class);
+        final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
+
 
         Observable<Id> countObservable = AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache, 100)
             .filter(new Func1<AllEntitiesInSystemObservable.ApplicationEntityGroup, Boolean>() {
@@ -375,6 +378,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                             public void call(Id id) {
                                 try {
                                     em.delete(new SimpleEntityRef(id.getType(), id.getUuid()));
+                                    gm.deleteEdge(new SimpleEdge(
+                                        applicationScope.getApplication(),
+                                        CpNamingUtils.getEdgeTypeFromCollectionName(InflectionUtils.pluralize(id.getType())),
+                                        id,
+                                        System.currentTimeMillis() + 1000
+                                    )).toBlocking().lastOrDefault(null);
+                                    gm.deleteNode(id,System.currentTimeMillis()+1000).toBlocking().lastOrDefault(null);
                                 } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }
